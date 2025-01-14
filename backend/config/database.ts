@@ -1,19 +1,41 @@
 import { connect, disconnect } from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
 
-export const connectDB = async (uri: string) => {
+let mongoServer: MongoMemoryServer | null = null;
+
+export const connectDB = async () => {
+  if (process.env.NODE_ENV === "testing") {
+    await connectTestDB();
+  } else {
+    await connectDatabase(process.env.MONGODB_URI || "");
+  }
+};
+
+export const connectDatabase = async (uri: string) => {
   try {
     await connect(uri);
+    console.log("Successfully connected to the database");
   } catch {
-    disconnect();
-    process.exit(1);
+    await disconnect();
+  }
+};
+
+export const connectTestDB = async () => {
+  try {
+    if (!mongoServer) {
+      mongoServer = await MongoMemoryServer.create();
+    }
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
+  } catch {
+    await mongoose.disconnect();
   }
 };
 
 export const handleShutdown = (signal: string) => {
   process.on(signal, async () => {
-    console.log(`Received ${signal}. Closing connection to MongoDB...`);
     await disconnect();
-    console.log("Connection to MongoDB closed.");
     process.exit(0);
   });
 };
