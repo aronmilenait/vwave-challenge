@@ -3,6 +3,6 @@ import { createLabel } from "../modules/shipper/controllers/shipperController";
 
 const router = express.Router();
 
-router.use("/labels", createLabel);
+router.post("/labels", createLabel);
 
 export default router;
