@@ -2,11 +2,24 @@ import express from "express";
 import dotenv from "dotenv";
 import shipperRoutes from "./routes/shipperRoutes";
 import { connectDB, handleShutdown } from "../config/database";
+import cors from "cors";
 
 dotenv.config();
 
 export const createApp = () => {
   const app = express();
+
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "https://vwavechallenge.vercel.app/",
+  ];
+
+  const options: cors.CorsOptions = {
+    origin: allowedOrigins,
+    credentials: true,
+  };
+
+  app.use(cors(options));
 
   app.use(express.json());
 
