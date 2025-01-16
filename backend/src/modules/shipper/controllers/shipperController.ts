@@ -8,9 +8,9 @@ import { createShippingLabelError } from "../services/errors";
 
 export const createLabel = async (req: Request, res: Response) => {
   try {
-    const { name, street, postalCode, city } = req.body;
+    const { street, postalCode, city } = req.body;
 
-    if (!name || !street || !postalCode || !city) {
+    if (!street || !postalCode || !city) {
       res.status(400).json({
         error: requiredFieldsError,
       });
@@ -20,7 +20,6 @@ export const createLabel = async (req: Request, res: Response) => {
     const token = await getAccessToken();
 
     const labelPdf = await createShippingLabel(token, {
-      name,
       street,
       postalCode,
       city,

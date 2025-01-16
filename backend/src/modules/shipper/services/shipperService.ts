@@ -23,7 +23,7 @@ export const getAccessToken = async (): Promise<string> => {
     );
 
     return response.data.access_token;
-  } catch (error) {
+  } catch {
     throw new Error(getAccessTokenError);
   }
 };
@@ -53,7 +53,7 @@ export const createShippingLabel = async (
               phone: "+49 123456789",
             },
             consignee: {
-              name1: shipmentDetails.name,
+              name1: "Maria Musterfrau",
               addressStreet: shipmentDetails.street,
               postalCode: shipmentDetails.postalCode,
               city: shipmentDetails.city,
