@@ -1,33 +1,40 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { useState } from "react";
 import axios from "axios";
+import { Suggestion } from "../interfaces/suggestionInterface";
 
-const GEOAPY_URL = `${import.meta.env.VITE_GEOAPIFY}`;
-export const VWAVE_URL = `${import.meta.env.VITE_VWAVE_URL}`;
+export const GEOAPYFY_URL = `${import.meta.env.VITE_GEOAPIFY}`;
+export const GEOAPYFY_API_KEY = `${import.meta.env.VITE_GEOAPIFY_API_KEY}`;
+export const VWAVE_API = `${import.meta.env.VITE_VWAVE_API}`;
 
 const ShippingLocation = () => {
   const [location, setLocation] = useState("");
-  const [suggestions, setSuggestions] = useState<
-    { properties: { formatted: string } }[]
-  >([]);
+  const [street, setStreet] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [city, setCity] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [error, setError] = useState<string | null>("");
+  const [successMessage, setSuccessMessage] = useState<string | null>("");
+  const [addressValidationMessage, setAddressValidationMessage] = useState<
+    string | null
+  >(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setLocation(query);
-
     if (query) {
       axios
-        .get(GEOAPY_URL, {
+        .get(GEOAPYFY_URL, {
           params: {
             text: query,
-            apiKey: import.meta.env.VITE_GEOAPIFY_API_KEY,
+            apiKey: GEOAPYFY_API_KEY,
             filter: "countrycode:de",
           },
         })
-        .then((response) => setSuggestions(response.data.features || []))
+        .then((response) => {
+          setSuggestions(response.data.features || []);
+        })
         .catch(() => {
           console.log(
             "There was a problem with your request. Please try again.",
@@ -38,24 +45,48 @@ const ShippingLocation = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSelectSuggestion = (suggestion: Suggestion) => {
+    setLocation(suggestion.properties.formatted);
+    const streetName = suggestion.properties.address_line1;
+    setStreet(streetName);
+    setPostalCode(suggestion.properties.postcode);
+    setCity(suggestion.properties.city);
+    setSuggestions([]);
+  };
 
-    if (!location) {
-      setError("Please enter a location");
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!street || !postalCode || !city) {
+      setAddressValidationMessage(
+        "Please introduce an address before trying to create a label.",
+      );
       return;
     }
 
+    setAddressValidationMessage(null);
     setLoading(true);
-    setError("");
-    setSuccessMessage("");
+    setError(null);
+    setSuccessMessage(null);
 
     try {
-      const response = await axios.post(VWAVE_URL, { location });
-      console.log("Label created:", response.data);
+      const consigneeData = {
+        street,
+        postalCode,
+        city,
+        country: "DE",
+      };
+
+      await axios.post(VWAVE_API, consigneeData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
       setSuccessMessage("Label created successfully!");
-    } catch {
-      console.log("There was a problem with your label. Please try again.");
+    } catch (error) {
+      console.log(error);
+      setError("There was a problem with your label. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -64,55 +95,62 @@ const ShippingLocation = () => {
   return (
     <div
       id="shipping-location"
-      className="container mx-auto px-6 py-16 bg-cyan-800 text-cyan-50"
+      className="flex items-center justify-center px-4 py-12 text-cyan-50"
     >
-      <h2 className="text-3xl font-bold mb-8 text-center">Where to ship?</h2>
-      <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <input
-            type="text"
-            value={location}
-            onChange={handleChange}
-            placeholder="Enter your location"
-            className="flex-grow px-4 py-2 rounded-full text-cyan-900 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          />
+      <div className="w-full max-w-md">
+        <h2 className="text-4xl font-bold mb-8 text-center">Where to ship?</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <input
+              type="text"
+              value={location}
+              onChange={handleChange}
+              placeholder="Enter your location"
+              className="w-full px-4 py-3 rounded-lg text-cyan-900 bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition duration-300 ease-in-out"
+            />
+          </div>
           <button
             type="submit"
-            className="bg-yellow-500 hover:bg-yellow-600 text-cyan-900 font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105"
-            disabled={loading || !location}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-cyan-900 font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-outd"
+            disabled={loading}
           >
             {loading ? "Creating Label..." : "Create Label"}
           </button>
-        </div>
-      </form>
+        </form>
 
-      {error && (
-        <div className="mt-4 text-red-500 text-center">
-          <p>{error}</p>
-        </div>
-      )}
+        {addressValidationMessage && (
+          <div className="mt-4 p-3 bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg">
+            <p className="text-yellow-200">{addressValidationMessage}</p>
+          </div>
+        )}
 
-      {successMessage && (
-        <div className="mt-4 text-green-500 text-center">
-          <p>{successMessage}</p>
-        </div>
-      )}
+        {error && (
+          <div className="mt-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg">
+            <p className="text-red-200">{error}</p>
+          </div>
+        )}
+        {successMessage && (
+          <div className="mt-4 p-3 bg-green-500 bg-opacity-20 border border-green-500 rounded-lg">
+            <p className="text-green-200">{successMessage}</p>
+          </div>
+        )}
 
-      {suggestions.length > 0 && (
-        <div className="mt-6 max-w-md mx-auto">
-          <ul className="bg-cyan-700 rounded-lg shadow-lg overflow-hidden">
-            {suggestions.map((suggestion, index) => (
-              <li
-                key={index}
-                className="px-4 py-2 hover:bg-cyan-600 cursor-pointer transition duration-300 ease-in-out"
-                onClick={() => setLocation(suggestion.properties.formatted)}
-              >
-                {suggestion.properties.formatted}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        {suggestions.length > 0 && (
+          <div className="mt-2">
+            <ul className="bg-cyan-700 rounded-lg shadow-lg overflow-hidden divide-y divide-cyan-600">
+              {suggestions.map((suggestion, index) => (
+                <li
+                  key={index}
+                  className="px-4 py-3 hover:bg-cyan-600 cursor-pointer transition duration-300 ease-in-out"
+                  onClick={() => handleSelectSuggestion(suggestion)}
+                >
+                  <span>{suggestion.properties.formatted}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
