@@ -1,5 +1,4 @@
 export interface ShipmentDetails {
-  name: string;
   street: string;
   postalCode: string;
   city: string;
