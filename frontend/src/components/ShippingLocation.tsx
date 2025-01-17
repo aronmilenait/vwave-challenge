@@ -80,6 +80,7 @@ const ShippingLocation = () => {
       await axios.post(VWAVE_API, consigneeData, {
         headers: {
           "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
         },
       });
 
