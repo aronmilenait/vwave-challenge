@@ -7,7 +7,7 @@ import ShippingLocation from "./components/ShippingLocation";
 
 function App() {
   return (
-    <main className="min-h-screen bg-cyan-800">
+    <main className="bg-cyan-800 max-h-screen">
       <Home />
       <ShippingLocation />
       <Labels />
