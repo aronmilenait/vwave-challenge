@@ -11,7 +11,7 @@ export const createApp = () => {
 
   const allowedOrigins = [
     "http://localhost:5173",
-    "https://vwavechallenge.vercel.app/",
+    "https://vwavechallenge.vercel.app",
   ];
 
   const options: cors.CorsOptions = {
