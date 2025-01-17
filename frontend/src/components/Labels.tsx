@@ -46,7 +46,7 @@ const Labels = () => {
   return (
     <section
       id="labels-section"
-      className="bg-cyan-800 text-cyan-50 min-h-screen py-16 px-4 sm:px-6 lg:px-8"
+      className="bg-cyan-800 text-cyan-50 py-16 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
         <h2 className="text-4xl font-bold mb-8 text-center">Labels</h2>
@@ -73,7 +73,7 @@ const Labels = () => {
           {labels.map((label) => (
             <li
               key={label._id}
-              className="bg-cyan-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 ease-in-out transform hover:scale-105"
+              className="bg-cyan-900 rounded-lg shadow-lg overflow-hidden"
             >
               <div className="p-6">
                 <h3 className="text-xl font-semibold mb-2">
